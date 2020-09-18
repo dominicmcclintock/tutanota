@@ -5,10 +5,13 @@ import {EntropyCollector} from "./EntropyCollector"
 import {SearchModel} from "../../search/SearchModel"
 import {MailModel} from "../../mail/MailModel"
 import {assertMainOrNode} from "../Env"
-import {Notifications} from "../../gui/Notifications"
+import {notifications} from "../../gui/Notifications"
 import {logins} from "./LoginController"
 import type {ContactModel} from "../../contacts/ContactModel"
 import {ContactModelImpl} from "../../contacts/ContactModel"
+import {EntityClient} from "../common/EntityClient"
+import type {CalendarModel} from "../../calendar/CalendarModel"
+import {CalendarModelImpl} from "../../calendar/CalendarModel"
 
 assertMainOrNode()
 
@@ -17,8 +20,10 @@ export type MainLocatorType = {|
 	entropyCollector: EntropyCollector,
 	search: SearchModel,
 	mailModel: MailModel;
+	calendarModel: CalendarModel;
 	init: (WorkerClient) => void;
 	contactModel: ContactModel;
+	entityClient: EntityClient;
 |}
 
 export const locator: MainLocatorType = ({
@@ -26,8 +31,10 @@ export const locator: MainLocatorType = ({
 		this.eventController = new EventController(logins)
 		this.entropyCollector = new EntropyCollector(worker)
 		this.search = new SearchModel(worker)
-		this.mailModel = new MailModel(new Notifications(), this.eventController, worker)
+		this.mailModel = new MailModel(notifications, this.eventController, worker)
+		this.calendarModel = new CalendarModelImpl(notifications, this.eventController, worker, logins)
 		this.contactModel = new ContactModelImpl(worker)
+		this.entityClient = new EntityClient(worker)
 	},
 }: any)
 
