@@ -1186,6 +1186,7 @@ module.exports = {
 		"noUpdateAvailable_msg": "No Update found.",
 		"installNow_action": "Install now.",
 		"checkingForUpdate_action": "Checking for Update…",
-		"resetZoomFactor_action": "Reset Zoom Factor"
+		"resetZoomFactor_action": "Reset Zoom Factor",
+		"invalidRegexSyntax_msg": "Invalid regex syntax"
 	}
 }

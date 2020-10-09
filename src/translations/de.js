@@ -1190,6 +1190,7 @@ module.exports = {
 		"installNow_action": "Jetzt installieren.",
 		"checkingForUpdate_action": "Suche nach Aktualisierung…",
 		"clientSuspensionWait_label": "Die Anfrage wird vom Server verarbeitet, bitte habe etwas Geduld.",
-		"resetZoomFactor_action": "Zoomfaktor zurücksetzen"
+		"resetZoomFactor_action": "Zoomfaktor zurücksetzen",
+		"invalidRegexSyntax_msg": "Ungültige Regex-Syntax" // TODO bitte meine Übersetzung korrigieren
 	}
 }
