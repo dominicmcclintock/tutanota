@@ -138,7 +138,6 @@ o.spec("SendMailModel", () => {
 		lang.init(en)
 	})
 	// the global worker is used in various other places silently, like in call to update from _updateContacts
-	// TODO find out where the worked is used
 	let worker: WorkerClient, logins: LoginController, eventController: EventController, mailModel: MailModel, contactModel: ContactModel,
 		mailboxDetails: MailboxDetail, userController: IUserController, entity: EntityClient, model: SendMailModel
 	let customer: Customer
@@ -269,7 +268,7 @@ o.spec("SendMailModel", () => {
 			o(model.getDraft()).equals(null)
 			o(model.allRecipients().length).equals(0)
 			o(model.getSender()).equals(DEFAULT_SENDER_FOR_TESTING)
-			o(model.isConfidential()).equals(false)
+			o(model.isConfidential()).equals(true)
 			o(model.containsExternalRecipients()).equals(false)
 			o(model.getAttachments().length).equals(0)
 
@@ -278,7 +277,6 @@ o.spec("SendMailModel", () => {
 
 		o("initWithTemplate data", async () => {
 
-			// TODO node does NOT like this for some reason, it works fine in chrome
 			const initializedModel = await model.initWithTemplate(
 				{to: [INTERNAL_RECIPIENT_1]},
 				SUBJECT_LINE_1,
@@ -293,9 +291,8 @@ o.spec("SendMailModel", () => {
 			o(initializedModel.getBody()).equals(BODY_TEXT_1)
 			o(initializedModel.getDraft()).equals(null)
 			o(initializedModel.allRecipients().length).equals(1)
-			// TODO check recipient values
 			o(initializedModel.getSender()).equals(DEFAULT_SENDER_FOR_TESTING)
-			o(model.isConfidential()).equals(false)
+			o(model.isConfidential()).equals(true)
 			o(model.containsExternalRecipients()).equals(false)
 			o(initializedModel.getAttachments().length).equals(0)
 
@@ -314,7 +311,6 @@ o.spec("SendMailModel", () => {
 				replyTos: []
 			})
 
-			// TODO node does NOT like this for some reason, it works fine in chrome
 			const initializedModel = await model.initWithDraft(draftMail, [], BODY_TEXT_1)
 
 			o(initializedModel.getConversationType()).equals(ConversationType.NEW)
@@ -322,9 +318,8 @@ o.spec("SendMailModel", () => {
 			o(initializedModel.getBody()).equals(BODY_TEXT_1)
 			o(initializedModel.getDraft()).equals(draftMail)
 			o(initializedModel.allRecipients().length).equals(0)
-			// TODO check recipient values
 			o(initializedModel.getSender()).equals(DEFAULT_SENDER_FOR_TESTING)
-			o(model.isConfidential()).equals(false)
+			o(model.isConfidential()).equals(true)
 			o(model.containsExternalRecipients()).equals(false)
 			o(initializedModel.getAttachments().length).equals(0)
 			o(initializedModel.hasMailChanged()).equals(false)("initialization should not flag mail changed")
@@ -341,9 +336,6 @@ o.spec("SendMailModel", () => {
 				replyTos: []
 			})
 
-			model.setConfidential(false)
-
-			// TODO node does NOT like this for some reason, it works fine in chrome
 			const initializedModel = await model.initWithDraft(draftMail, [], BODY_TEXT_1)
 
 			o(initializedModel.getConversationType()).equals(ConversationType.NEW)
@@ -354,7 +346,6 @@ o.spec("SendMailModel", () => {
 			o(initializedModel.toRecipients().length).equals(1)
 			o(initializedModel.ccRecipients().length).equals(1)
 			o(initializedModel.bccRecipients().length).equals(0)
-			// TODO check recipient values
 			o(initializedModel.getSender()).equals(DEFAULT_SENDER_FOR_TESTING)
 			o(model.isConfidential()).equals(true)
 			o(model.containsExternalRecipients()).equals(true)
@@ -779,10 +770,5 @@ o.spec("SendMailModel", () => {
 			o(updatedContact == null).equals(true)
 
 		})
-
-
 	})
-
-	// TODO test entityEventUpdate
-	// TODO test draft saves
 })

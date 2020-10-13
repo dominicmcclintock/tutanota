@@ -52,7 +52,7 @@ import type {ContactModel} from "../contacts/ContactModel"
 import type {Language, TranslationKey} from "../misc/LanguageViewModel"
 import {_getSubstitutedLanguageCode, getAvailableLanguageCode, lang, languages} from "../misc/LanguageViewModel"
 import type {IUserController} from "../api/main/UserController"
-import {easyMatch} from "../api/common/utils/StringUtils"
+import {cleanMatch} from "../api/common/utils/StringUtils"
 import type {WorkerClient} from "../api/main/WorkerClient"
 import {worker} from "../api/main/WorkerClient"
 import {RecipientsNotFoundError} from "../api/common/error/RecipientsNotFoundError"
@@ -309,6 +309,8 @@ export class SendMailModel {
 	 * @param subject
 	 * @param bodyText
 	 * @param attachments
+	 * @param confidential
+	 * @param senderMailAddress
 	 * @returns {Promise<SendMailModel>}
 	 */
 	initWithTemplate(
@@ -446,7 +448,16 @@ export class SendMailModel {
 		this._body = bodyText
 		this._draft = draft || null
 		const {to = [], cc = [], bcc = []} = recipients
-		const makeRecipientInfo = (r: Recipient) => this._createAndResolveRecipientInfo(r.name, r.address, r.contact, false)
+		const makeRecipientInfo = (r: Recipient) => {
+			const recipient = this._createAndResolveRecipientInfo(r.name, r.address, r.contact, false)
+			if (recipient.resolveContactPromise) {
+				recipient.resolveContactPromise.then(() => this._mailChanged = false)
+			} else {
+				this._mailChanged = false
+			}
+			return recipient
+		}
+
 		this._recipients.set("to", to.filter(r => isMailAddress(r.address, false))
 		                             .map(makeRecipientInfo))
 		this._recipients.set("cc", cc.filter(r => isMailAddress(r.address, false))
@@ -457,14 +468,19 @@ export class SendMailModel {
 		this._senderAddress = senderMailAddress || this._getDefaultSender()
 		this._isConfidential = confidential == null ? !this.user().props.defaultUnconfidential : confidential
 		this._attachments = []
-		if (attachments) this.attachFiles(attachments)
+		if (attachments) {
+			this.attachFiles(attachments)
+			this._mailChanged = false
+		}
 
 		this._replyTos = (replyTos || []).map(ema => {
 
 			const ri = createRecipientInfo(ema.address, ema.name, null)
 			if (this._logins.isInternalUserLoggedIn()) {
 				resolveRecipientInfoContact(ri, this._contactModel, this.user().user)
-					.then(() => this.setMailChanged(true))
+					.then(() => {
+						this.onMailChanged(true);
+					})
 			}
 			return ri
 		})
@@ -729,8 +745,16 @@ export class SendMailModel {
 			.catch(PreconditionFailedError, () => {throw new UserError("operationStillActive_msg")})
 	}
 
+	/**
+	 * Whether any of the external recipients have an insecure password.
+	 * We don't consider empty passwords, because an empty password will disallow and encrypted email from sending, whereas an insecure password
+	 * can still be used
+	 * @returns {boolean}
+	 */
 	hasInsecurePasswords(): boolean {
-		return this.getExternalRecipients().reduce((min, recipient) => Math.min(min, this.getPasswordStrength(recipient)), 100) < 80
+		return this.allRecipients()
+		           .filter(r => this.getPassword(r.mailAddress) !== "")
+		           .reduce((min, recipient) => Math.min(min, this.getPasswordStrength(recipient)), 100) < 80
 	}
 
 	/**
@@ -879,7 +903,7 @@ export class SendMailModel {
 							&& isSameId(recipient.contact._id, contact._id))
 						matching.forEach(recipient => {
 							// if the mail address no longer exists on the contact then delete the recipient
-							if (!contact.mailAddresses.find(ma => easyMatch(ma.address, recipient.mailAddress))) {
+							if (!contact.mailAddresses.find(ma => cleanMatch(ma.address, recipient.mailAddress))) {
 								this.removeRecipient(recipient, fieldType, true)
 							} else {
 								// else just modify the recipient

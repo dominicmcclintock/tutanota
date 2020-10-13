@@ -7,6 +7,7 @@ import {px} from "../size"
 import {Dialog} from "./Dialog"
 import {isMailAddress} from '../../misc/FormatValidator.js'
 import type {ImageHandler} from '../../mail/MailUtils'
+import {logins} from "../../api/main/LoginController"
 
 type SanitizerFn = (html: string, isPaste: boolean) => DocumentFragment
 
@@ -98,13 +99,15 @@ export class Editor implements ImageHandler {
 				sanitizeToDOMFragment: this._sanitizer,
 			})
 			.addEventListener('keyup', (e) => {
-				if (e.which === 32) {
-					let blocks = []
-					squire.forEachBlock((block) => {
-						blocks.push(block)
-					})
-					createList(blocks, /^1\.\s$/, true) // create an ordered list if a line is started with '1. '
-					createList(blocks, /^\*\s$/, false) // create an ordered list if a line is started with '1. '
+				if (!logins.getUserController().props.sendPlaintextOnly) {
+					if (e.which === 32) {
+						let blocks = []
+						squire.forEachBlock((block) => {
+							blocks.push(block)
+						})
+						createList(blocks, /^1\.\s$/, true) // create an ordered list if a line is started with '1. '
+						createList(blocks, /^\*\s$/, false) // create an ordered list if a line is started with '1. '
+					}
 				}
 			})
 

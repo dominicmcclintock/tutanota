@@ -7,7 +7,7 @@ import {calendarAttendeeStatusSymbol, formatEventDuration, getTimeZone} from "./
 import type {CalendarEvent} from "../api/entities/tutanota/CalendarEvent"
 import {stringToUtf8Uint8Array, uint8ArrayToBase64} from "../api/common/utils/Encoding"
 import {defaultTheme} from "../gui/theme"
-import {assertNotNull, downcast, noOp} from "../api/common/utils/Utils"
+import {assertNotNull, noOp} from "../api/common/utils/Utils"
 import {SendMailModel} from "../mail/SendMailModel"
 import type {Mail} from "../api/entities/tutanota/Mail"
 import {windowFacade} from "../misc/WindowFacade"
@@ -15,6 +15,7 @@ import type {EncryptedMailAddress} from "../api/entities/tutanota/EncryptedMailA
 import type {CalendarEventAttendee} from "../api/entities/tutanota/CalendarEventAttendee"
 import {createCalendarEventAttendee} from "../api/entities/tutanota/CalendarEventAttendee"
 import {isTutanotaMailAddress} from "../api/common/RecipientInfo"
+import {createMailAddress} from "../api/entities/tutanota/MailAddress"
 
 export interface CalendarUpdateDistributor {
 	sendInvite(existingEvent: CalendarEvent, sendMailModel: SendMailModel): Promise<void>;
@@ -87,7 +88,7 @@ export class CalendarMailDistributor implements CalendarUpdateDistributor {
 					              previousMail: responseTo,
 					              conversationType: ConversationType.REPLY,
 					              senderMailAddress: sendAs,
-					              toRecipients: [downcast(organizer)], // TODO not sure if downcast from EncryptedMailAddress to MailAddress is a good or bad thing
+					              toRecipients: [createMailAddress({address: organizer.address, name: organizer.name, contact: null})],
 					              ccRecipients: [],
 					              bccRecipients: [],
 					              attachments: [],

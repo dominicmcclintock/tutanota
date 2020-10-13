@@ -33,7 +33,7 @@ import type {RecipientInfoBubble, RecipientInfoBubbleFactory} from "../misc/Reci
 import {RecipientInfoBubbleHandler} from "../misc/RecipientInfoBubbleHandler"
 import type {Contact} from "../api/entities/tutanota/Contact"
 import {ContactTypeRef} from "../api/entities/tutanota/Contact"
-import {easyMatch} from "../api/common/utils/StringUtils"
+import {cleanMatch} from "../api/common/utils/StringUtils"
 import {ConnectionError, TooManyRequestsError} from "../api/common/error/RestError"
 
 export function chooseAndAttachFile(model: SendMailModel, boundingRect: ClientRect, fileTypes?: Array<string>): Promise<?$ReadOnlyArray<FileReference | DataFile>> {
@@ -254,7 +254,7 @@ export class MailEditorRecipientField implements RecipientInfoBubbleFactory {
 			lazyContactListId(this.model.logins(), this.model.entity()).getAsync().then(contactListId => {
 				const id: IdTuple = [contactListId, contactElementId]
 				this.model.entity().load(ContactTypeRef, id).then(contact => {
-					if (contact.mailAddresses.find(ma => easyMatch(ma.address, mailAddress))) {
+					if (contact.mailAddresses.find(ma => cleanMatch(ma.address, mailAddress))) {
 						recipient.name = getContactDisplayName(contact)
 						recipient.contact = contact
 						recipient.resolveContactPromise = null

@@ -1262,7 +1262,7 @@ export class MailViewer {
 	_forward() {
 		return checkApprovalStatus(false).then(sendAllowed => {
 			if (sendAllowed) {
-				return this._createResponseMailEditorArgsForForwarding([], [], true).then(args => {
+				return this._createResponseMailArgsForForwarding([], [], true).then(args => {
 					return this._getMailboxDetails().then(mailboxDetails => {
 						newMailEditorAsResponse(args, mailboxDetails, this._contentBlocked, this._inlineImages)
 							.then(editor => editor.show())
@@ -1272,7 +1272,7 @@ export class MailViewer {
 		})
 	}
 
-	_createResponseMailEditorArgsForForwarding(recipients: MailAddress[], replyTos: EncryptedMailAddress[], addSignature: boolean): Promise<ResponseMailParameters> {
+	_createResponseMailArgsForForwarding(recipients: MailAddress[], replyTos: EncryptedMailAddress[], addSignature: boolean): Promise<ResponseMailParameters> {
 		let infoLine = lang.get("date_label") + ": " + formatDateTime(this.mail.sentDate) + "<br>"
 		infoLine += lang.get("from_label") + ": " + this.mail.sender.address + "<br>"
 		if (this.mail.toRecipients.length > 0) {
@@ -1336,7 +1336,7 @@ export class MailViewer {
 			newReplyTos[0].name = this.mail.sender.name
 		}
 
-		return this._createResponseMailEditorArgsForForwarding([recipient], newReplyTos, false).then(args => {
+		return this._createResponseMailArgsForForwarding([recipient], newReplyTos, false).then(args => {
 			return this._getMailboxDetails().then(mailboxDetails => {
 				return defaultSendMailModel(mailboxDetails).initAsResponse(args).then(model => model.send(MailMethod.NONE))
 			})

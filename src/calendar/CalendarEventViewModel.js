@@ -61,6 +61,7 @@ import {logins} from "../api/main/LoginController"
 import {locator} from "../api/main/MainLocator"
 import {ProgrammingError} from "../api/common/error/ProgrammingError"
 import {worker} from "../api/main/WorkerClient"
+import {cleanMatch} from "../api/common/utils/StringUtils"
 
 const TIMESTAMP_ZERO_YEAR = 1970
 
@@ -378,11 +379,27 @@ export class CalendarEventViewModel {
 		if (this.shouldShowInviteUnavailble()) {
 			throw new ProgrammingError("Not available for free account")
 		}
-		const recipientInfo = this._inviteModel.addOrGetRecipient("bcc", {address: mailAddress, contact, name: null})
+
+		// We don't add a guest if they are already an attendee or if they are ourself
+		// even though the SendMailModel handles deduplication, we need to check here because recipients shouldn't be duplicated across the 3 models either
+		if (this.attendees().some((a) => a.address.address === mailAddress)
+			|| this._ownMailAddresses.some(address => cleanMatch(address, mailAddress))) {
+			return
+		}
+
+		// SendMailModel handles deduplication
+		// this.attendees will be updated when the model's recipients are updated
+		this._inviteModel.addOrGetRecipient("bcc", {address: mailAddress, contact, name: null})
+
 		const isOwnAttendee = this._ownMailAddresses.includes(mailAddress)
 		const status = isOwnAttendee ? CalendarAttendeeStatus.ACCEPTED : CalendarAttendeeStatus.ADDED
-		this._guestStatuses(addMapEntry(this._guestStatuses(), recipientInfo.mailAddress, status))
 
+		// if this guy wasn't already an attendee with a status
+		if (!this._guestStatuses().has(mailAddress)) {
+			this._guestStatuses(addMapEntry(this._guestStatuses(), mailAddress, status))
+		}
+
+		// Add organizer as attendee if not currenly in the list
 		if (this.attendees().length === 1 && this.findOwnAttendee() == null) {
 			this.selectGoing(CalendarAttendeeStatus.ACCEPTED)
 		}
@@ -643,7 +660,8 @@ export class CalendarEventViewModel {
 			? askForUpdates()
 			: Promise.resolve("no")
 
-		const passwordCheck = () => this.hasInsecurePasswords() ? askInsecurePassword() : Promise.resolve(true)
+		const passwordCheck = () => this.hasInsecurePasswords()
+		&& this.containsExternalRecipients() ? askInsecurePassword() : Promise.resolve(true)
 
 		return askForUpdatesAwait.then(updateResponse => {
 			if (updateResponse === "cancel") {
@@ -816,6 +834,12 @@ export class CalendarEventViewModel {
 				|| this._updateModel.hasInsecurePasswords()
 				|| this._cancelModel.hasInsecurePasswords()
 		}
+	}
+
+	containsExternalRecipients(): boolean {
+		return this._inviteModel.containsExternalRecipients()
+			|| this._updateModel.containsExternalRecipients()
+			|| this._cancelModel.containsExternalRecipients()
 	}
 
 	getAvailableCalendars(): Array<CalendarInfo> {

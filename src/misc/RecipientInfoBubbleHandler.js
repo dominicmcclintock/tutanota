@@ -85,9 +85,9 @@ export class RecipientInfoBubbleHandler implements BubbleHandler<RecipientInfo, 
 			if (part.length !== 0) {
 				let bubble = this._getBubbleFromText(part)
 				if (!bubble) {
-					// TODO Update model if generating bubbles fails, as it is possible that recipient has been created in the process
 					// if text is copy pasted in then we may have already generated some bubbles, in which case the factory may or may not
-					// need to know that we will be discarding them all (in the case of MailEditorBubbleFactory it does need to know)
+					// need to know that we will be discarding them all (in the case of MailEditorRecipientField, it does need to know so it can delete any created recipients)
+					bubbles.forEach(b => this.bubbleDeleted(b))
 					return [] // if one recipient is invalid, we do not return any valid ones because all invalid text would be deleted otherwise
 				} else {
 					bubbles.push(bubble)

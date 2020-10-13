@@ -383,10 +383,9 @@ function createMailEditorDialog(model: SendMailModel, blockExternalContent: bool
 
 
 	const save = () => {
-		model.saveDraft(true, MailMethod.NONE, showProgressDialog)
-		     .then(() => dialog.close())
-		     .catch(FileNotFoundError, () => Dialog.error("couldNotAttachFile_msg"))
-		     .catch(PreconditionFailedError, () => Dialog.error("operationStillActive_msg"))
+		return model.saveDraft(true, MailMethod.NONE, showProgressDialog)
+		            .catch(FileNotFoundError, () => Dialog.error("couldNotAttachFile_msg"))
+		            .catch(PreconditionFailedError, () => Dialog.error("operationStillActive_msg"))
 	}
 	const send = () => {
 		try {
@@ -420,7 +419,7 @@ function createMailEditorDialog(model: SendMailModel, blockExternalContent: bool
 			},
 			{
 				label: "saveDraft_action",
-				click: save,
+				click: () => { save().then(() => dialog.close()) },
 				type: ButtonType.Dropdown,
 			}
 		], () => model.hasMailChanged(), 250
@@ -482,7 +481,7 @@ function createMailEditorDialog(model: SendMailModel, blockExternalContent: bool
 	               .addShortcut({
 		               key: Keys.S,
 		               ctrl: true,
-		               exec: save,
+		               exec: () => { save() },
 		               help: "save_action"
 	               })
 	               .addShortcut({

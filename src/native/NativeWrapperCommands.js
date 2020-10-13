@@ -4,7 +4,6 @@ import {getMimeType, getName, getSize} from "./FileApp"
 import {asyncImport} from "../api/common/utils/Utils"
 import {CloseEventBusOption, SECOND_MS} from "../api/common/TutanotaConstants"
 import {nativeApp} from "./NativeWrapper"
-import {newMailEditorFromTemplate, newMailtoUrlMailEditor} from "../mail/MailEditorN"
 
 const createMailEditor = (msg: Request) => {
 	return Promise.all([
@@ -22,8 +21,8 @@ const createMailEditor = (msg: Request) => {
 				             const address = addresses && addresses[0] || ""
 				             const recipients = address ? {to: [{name: "", address: address}]} : {}
 				             const editorPromise = mailToUrl
-					             ? newMailtoUrlMailEditor(mailToUrl, false, mailboxDetails, files)
-					             : newMailEditorFromTemplate(
+					             ? mailEditorModule.newMailtoUrlMailEditor(mailToUrl, false, mailboxDetails, files)
+					             : mailEditorModule.newMailEditorFromTemplate(
 						             mailboxDetails,
 						             recipients,
 						             subject || (files.length > 0 ? files[0].name : ""),
