@@ -115,6 +115,7 @@ export class LoginFacade {
 		this._restClient = restClient
 		this._entity = entity
 		this.reset()
+
 	}
 
 	init(indexer: Indexer, eventBusClient: EventBusClient) {
@@ -543,7 +544,8 @@ export class LoginFacade {
 	}
 
 	storeEntropy(): Promise<void> {
-		if (!this._accessToken) return Promise.resolve()
+		// We only store entropy if we are the leader
+		if (!this._accessToken || !this._worker.leaderStatus()) return Promise.resolve()
 		return this._entity.loadRoot(TutanotaPropertiesTypeRef, this.getUserGroupId()).then(tutanotaProperties => {
 			tutanotaProperties.groupEncEntropy = encryptBytes(this.getUserGroupKey(), random.generateRandomData(32))
 			return update(tutanotaProperties)

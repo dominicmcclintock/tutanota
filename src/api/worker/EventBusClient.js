@@ -277,6 +277,8 @@ export class EventBusClient {
 					this._lastAntiphishingMarkersId = data.lastId
 					this._mail.phishingMarkersUpdateReceived(data.markers)
 				})
+		} else if (type === "leaderStatus") {
+			this._worker.setLeaderStatus(JSON.parse(value))
 		} else {
 			console.log("ws message with unknown type", type)
 		}
